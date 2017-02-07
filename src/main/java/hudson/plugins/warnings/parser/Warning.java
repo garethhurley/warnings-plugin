@@ -88,6 +88,7 @@ public class Warning extends AbstractAnnotation {
     public Warning(final FileAnnotation copy, final int currentLine) {
         super(copy.getPriority(), copy.getMessage(), copy.getPrimaryLineNumber(), currentLine, copy.getCategory(),
                 copy.getType());
+        setPackageName(copy.getPackageName());
         setFileName(copy.getFileName());
         setOrigin(ORIGIN);
     }

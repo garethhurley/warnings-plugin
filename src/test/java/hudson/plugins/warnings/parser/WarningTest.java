@@ -63,6 +63,7 @@ public class WarningTest {
     @Test
     public void warning_copy_constructor_with_additional_message_preserves_the_packagename() {
         Warning originalWarning = createWarning();
+        originalWarning.setPackageName("Non-null package name");
         Warning additionalMessageWarning = new Warning(originalWarning, "message2", 1);
         assertEquals(originalWarning.getPackageName(), additionalMessageWarning.getPackageName());
     }
@@ -70,6 +71,7 @@ public class WarningTest {
     @Test
     public void warning_simple_copy_constructor_preserves_the_packagename() {
         Warning originalWarning = createWarning();
+        originalWarning.setPackageName("Non-null package name");
         Warning additionalMessageWarning = new Warning(originalWarning, 1);
         assertEquals(originalWarning.getPackageName(), additionalMessageWarning.getPackageName());
     }
