@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import hudson.plugins.analysis.util.model.Priority;
 import org.junit.Test;
 
 import hudson.plugins.analysis.core.AnnotationDifferencer;
@@ -57,6 +58,26 @@ public class WarningTest {
         assertFalse("The objects are the same", first.equals(second));
         first.setModuleName("something");
         assertFalse("The objects are the same", first.equals(second));
+    }
+
+    @Test
+    public void warning_copy_constructor_with_additional_message_preserves_the_packagename() {
+        Warning originalWarning = createWarning();
+        Warning additionalMessageWarning = new Warning(originalWarning, "message2", 1);
+        assertEquals(originalWarning.getPackageName(), additionalMessageWarning.getPackageName());
+    }
+
+    @Test
+    public void warning_simple_copy_constructor_preserves_the_packagename() {
+        Warning originalWarning = createWarning();
+        Warning additionalMessageWarning = new Warning(originalWarning, 1);
+        assertEquals(originalWarning.getPackageName(), additionalMessageWarning.getPackageName());
+    }
+
+    @Test
+    public void warning_copy_constructor_with_additional_message_appends_the_additional_message() {
+        Warning additionalMessageWarning = new Warning(createWarning(), "message2", 1);
+        assertEquals("message\nmessage2", additionalMessageWarning.getMessage());
     }
 
     private Warning createWarning() {

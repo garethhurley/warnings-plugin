@@ -64,10 +64,12 @@ public class MavenConsoleParser extends RegexpLineParser {
     protected Collection<FileAnnotation> postProcessWarnings(final List<FileAnnotation> warnings) {
         LinkedList<FileAnnotation> condensed = new LinkedList<FileAnnotation>();
         int line = -1;
+        boolean startOfWarning = false;
         for (FileAnnotation warning : warnings) {
             if (warning.getPrimaryLineNumber() == line + 1 && !condensed.isEmpty()) {
                 FileAnnotation previous = condensed.getLast();
-                if (previous.getPriority() == warning.getPriority()) {
+                startOfWarning = isStartOfWarning(warning.getMessage());
+                if (previous.getPriority() == warning.getPriority() && !isStartOfWarning(warning.getMessage())) {  //blank indicates end of a message
                     condensed.removeLast();
                     if (previous.getMessage().length() + warning.getMessage().length() >= MAX_MESSAGE_LENGTH) {
                         condensed.add(new Warning(previous, warning.getPrimaryLineNumber()));
@@ -92,6 +94,10 @@ public class MavenConsoleParser extends RegexpLineParser {
             }
         }
         return noBlank;
+    }
+
+    private boolean isStartOfWarning(String message) {
+        return message.startsWith("Some problems were encountered ");
     }
 }
 
