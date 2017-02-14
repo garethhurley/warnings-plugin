@@ -22,16 +22,28 @@ public class WarningsFilter {
     private final Set<Pattern> excludePatterns = Sets.newHashSet();
 
     private Set<Pattern> addPatterns(final @CheckForNull String pattern) {
+        return addPatterns(pattern, true);
+    }
+
+    private Set<Pattern> addPatterns(final String pattern, final boolean isDirectoryPattern) {
         Set<Pattern> patterns = Sets.newHashSet();
         if (StringUtils.isNotBlank(pattern)) {
             String[] split = StringUtils.split(pattern, ',');
             for (String singlePattern : split) {
-                String trimmed = StringUtils.trim(singlePattern);
-                String directoriesReplaced = StringUtils.replace(trimmed, "**", "*"); // NOCHECKSTYLE
-                patterns.add(Pattern.compile(StringUtils.replace(directoriesReplaced, "*", ".*"))); // NOCHECKSTYLE
+                singlePattern = StringUtils.trim(singlePattern);
+                if(isDirectoryPattern){
+                    singlePattern = handleAntFileSyntax(singlePattern);
+                }
+                patterns.add(Pattern.compile(singlePattern)); // NOCHECKSTYLE
             }
         }
         return patterns;
+    }
+
+    private String handleAntFileSyntax(String singlePattern) {
+        singlePattern = StringUtils.replace(singlePattern, "**", "*"); // NOCHECKSTYLE
+        singlePattern = StringUtils.replace(singlePattern, "*", ".*");
+        return singlePattern;
     }
 
     /**
@@ -57,7 +69,7 @@ public class WarningsFilter {
                                      final PluginLogger logger) {
         Collection<Pattern> includePatterns = addPatterns(includePattern);
         Collection<Pattern> excludePatterns = addPatterns(excludePattern);
-        Collection<Pattern> messagesPatterns = addPatterns(messagesPattern);
+        Collection<Pattern> messagesPatterns = addPatterns(messagesPattern, false);
 
         Collection<FileAnnotation> includedAnnotations;
         if (includePatterns.isEmpty()) {

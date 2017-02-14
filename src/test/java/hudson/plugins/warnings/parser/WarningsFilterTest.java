@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import hudson.plugins.analysis.util.NullLogger;
@@ -17,28 +18,83 @@ import hudson.plugins.analysis.util.model.Priority;
  * @author StKlug
  */
 public class WarningsFilterTest {
+    private WarningsFilter filter;
+
     /**
      * Tests the exclusion of certain warning messages from the report.
      */
     @Test
-    public void testMessagesPattern() {
-        Warning w1 = createDummyWarning("Javadoc: Missing tag for parameter arg1");
-        Warning w2 = createDummyWarning("The import java.io.OutputStream is never used");
-        Collection<FileAnnotation> warnings = new LinkedList<FileAnnotation>();
-        warnings.add(w1);
-        warnings.add(w2);
+    public void testMessagesPatternNonRegex() {
+        assertArg1MatchesArg2DoesntMatchPattern("Javadoc: Missing tag for parameter arg1",
+                "The import java.io.OutputStream is never used", "Javadoc: Missing tag for parameter arg1");
+    }
 
-        WarningsFilter filter = new WarningsFilter();
-        // exclude warnings with this warning message from the report
-        final String excludeMessage = "Javadoc: Missing tag for parameter arg1";
-        warnings = filter.apply(warnings, null, null, excludeMessage, new NullLogger());
+    @Test
+    public void testMessagesPatternWithRegex() {
+        assertArg1MatchesArg2DoesntMatchPattern("Javadoc: Missing tag for parameter arg1",
+                "The import java.io.OutputStream is never used", ".*1");
+    }
+
+    @Test
+    public void testMessagesPatternWithRegexMatchesJavaRegexSyntax() {
+        assertArg1MatchesArg2DoesntMatchPattern("Javadoc: Missing tag for parameter arg1",
+                "The import java.io.OutputStream is never used", ".*1.*");
+    }
+
+    @Test
+    public void testDirectoryExclusionRegexWithAntPathSyntax() {
+        Warning w1 = createDummyWarning("", "path/directory1");
+        Warning w2 = createDummyWarning("", "path/directory2");
+        Collection<FileAnnotation> warnings = buildWarningsCollection(w1, w2);
+        String excludeDirectoryPattern = "**/directory1";
+        warnings = filter.apply(warnings, null, excludeDirectoryPattern, null, new NullLogger());
 
         assertFalse(warnings.contains(w1));
         assertTrue(warnings.contains(w2));
     }
 
+    @Test
+    public void testDirectoryInclusionRegexWithAntPathSyntax() {
+        Warning w1 = createDummyWarning("", "path/directory1");
+        Warning w2 = createDummyWarning("", "path/directory2");
+        Collection<FileAnnotation> warnings = buildWarningsCollection(w1, w2);
+        String includeDirectoryPattern = "**/directory1";
+        warnings = filter.apply(warnings, includeDirectoryPattern, null, null, new NullLogger());
+
+        assertTrue(warnings.contains(w1));
+        assertFalse(warnings.contains(w2));
+    }
+
+    private void assertArg1MatchesArg2DoesntMatchPattern(String matches, String nonMatch, String excludePattern) {
+        Warning w1 = createDummyWarning(matches);
+        Warning w2 = createDummyWarning(nonMatch);
+        Collection<FileAnnotation> warnings = buildWarningsCollection(w1, w2);
+
+        warnings = filter.apply(warnings, null, null, excludePattern, new NullLogger());
+
+        assertFalse(warnings.contains(w1));
+        assertTrue(warnings.contains(w2));
+    }
+
+    @Before
+    public void setup(){
+        this.filter = new WarningsFilter();
+    }
+
     private Warning createDummyWarning(final String message) {
-        return new Warning("dummyFile.java", 0, "warningType", "warningCategory", message, Priority.LOW);
+        return createDummyWarning(message, "dummyFile.java");
+    }
+
+    private Warning createDummyWarning(final String message, String fileName) {
+        return new Warning(fileName, 0, "warningType", "warningCategory", message, Priority.LOW);
+    }
+
+    private Collection<FileAnnotation> buildWarningsCollection(Warning... warnings){
+        Collection<FileAnnotation> warningCollection = new LinkedList<FileAnnotation>();
+        for (Warning warning: warnings){
+            warningCollection.add(warning);
+        }
+        return warningCollection;
     }
 }
 
