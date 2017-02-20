@@ -34,7 +34,7 @@ public class WarningsFilter {
                 if(isDirectoryPattern){
                     singlePattern = handleAntFileSyntax(singlePattern);
                 }
-                patterns.add(Pattern.compile(singlePattern)); // NOCHECKSTYLE
+                patterns.add(Pattern.compile(singlePattern, Pattern.DOTALL)); // NOCHECKSTYLE
             }
         }
         return patterns;

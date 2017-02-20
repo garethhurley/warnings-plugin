@@ -36,6 +36,14 @@ public class WarningsFilterTest {
     }
 
     @Test
+    public void testMultilineMessageMatchesRegex(){
+        assertArg1MatchesArg2DoesntMatchPattern("This multiline expression\nShould match 1 present",
+                "This multiline expression\r\nShould not match", ".*1.*");
+        assertArg1MatchesArg2DoesntMatchPattern("This multiline expression\r\nShould match 1 present",
+                "This multiline expression\r\nShould not match", ".*1.*");
+    }
+
+    @Test
     public void testMessagesPatternWithRegexMatchesJavaRegexSyntax() {
         assertArg1MatchesArg2DoesntMatchPattern("Javadoc: Missing tag for parameter arg1",
                 "The import java.io.OutputStream is never used", ".*1.*");
@@ -65,15 +73,15 @@ public class WarningsFilterTest {
         assertFalse(warnings.contains(w2));
     }
 
-    private void assertArg1MatchesArg2DoesntMatchPattern(String matches, String nonMatch, String excludePattern) {
-        Warning w1 = createDummyWarning(matches);
+    private void assertArg1MatchesArg2DoesntMatchPattern(String matchesExclusionPattern, String nonMatch, String excludePattern) {
+        Warning w1 = createDummyWarning(matchesExclusionPattern);
         Warning w2 = createDummyWarning(nonMatch);
         Collection<FileAnnotation> warnings = buildWarningsCollection(w1, w2);
 
         warnings = filter.apply(warnings, null, null, excludePattern, new NullLogger());
 
-        assertFalse(warnings.contains(w1));
-        assertTrue(warnings.contains(w2));
+        assertFalse("Pattern "+excludePattern+" should have matched string:"+matchesExclusionPattern, warnings.contains(w1));
+        assertTrue("Pattern "+excludePattern+" expected to not match string:"+nonMatch, warnings.contains(w2));
     }
 
     @Before
